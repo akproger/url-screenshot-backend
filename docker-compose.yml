@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: url-screenshot-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    env_file: .env  # Подключаем .env файл для backend
+
+  db:
+    image: postgres:13
+    container_name: url-screenshot-db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
