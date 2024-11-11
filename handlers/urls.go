@@ -57,8 +57,8 @@ func CheckURLHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(CheckUrlResponse{Exists: true, Gen: gen})
 }
 
-// CreateDiscussionHandler — создает новое обсуждение для URL
-func CreateDiscussionHandler(w http.ResponseWriter, r *http.Request) {
+// CreateURLHandler — создает новый URL для обсуждения
+func CreateURLHandler(w http.ResponseWriter, r *http.Request) {
 	var req CreateDiscussionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -70,7 +70,6 @@ func CreateDiscussionHandler(w http.ResponseWriter, r *http.Request) {
 	userIP := r.RemoteAddr
 	createdAt := time.Now()
 
-	// Выполняем вставку в БД
 	_, err := database.DB.Exec(
 		"INSERT INTO urls (url, gen, user_ip, created_at) VALUES ($1, $2, $3, $4)",
 		req.URL, gen, userIP, createdAt,
