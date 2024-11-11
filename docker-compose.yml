@@ -9,6 +9,8 @@ services:
     depends_on:
       - db
     env_file: .env
+    networks:
+      - app-network  # Подключаем к общей сети
 
   db:
     image: postgres:13
@@ -21,7 +23,13 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # Добавляем скрипт для инициализации
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network  # Подключаем к общей сети
 
 volumes:
   pgdata:
+
+networks:
+  app-network:
+    external: true  # Используем существующую сеть
