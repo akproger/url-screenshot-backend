@@ -18,6 +18,7 @@ type URL struct {
 }
 
 // CreateURLHandler — добавление нового URL
+// CreateURLHandler — добавление нового URL
 func CreateURLHandler(w http.ResponseWriter, r *http.Request) {
 	var url URL
 	err := json.NewDecoder(r.Body).Decode(&url)
@@ -26,15 +27,23 @@ func CreateURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = database.DB.Exec("INSERT INTO urls (url, gen, user_ip) VALUES ($1, $2, $3)",
-		url.URL, url.Gen, url.UserIP)
+	// Выполняем вставку и возвращаем ID новой записи
+	var lastInsertID int
+	err = database.DB.QueryRow("INSERT INTO urls (url, gen, user_ip) VALUES ($1, $2, $3) RETURNING id",
+		url.URL, url.Gen, url.UserIP).Scan(&lastInsertID)
 	if err != nil {
 		http.Error(w, "Failed to create URL", http.StatusInternalServerError)
 		return
 	}
 
+	// Формируем JSON-ответ с ID новой записи
+	response := map[string]interface{}{
+		"message": "URL created successfully",
+		"id":      lastInsertID,
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("URL created successfully"))
+	json.NewEncoder(w).Encode(response)
 }
 
 // GetURLHandler — получение URL по ID

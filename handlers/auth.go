@@ -3,10 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/akproger/url-screenshot-backend/database"
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,6 +16,7 @@ var jwtKey = []byte("your_secret_key")
 type Credentials struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Role     string `json:"role"` // Добавляем поле для роли
 }
 
 type Claims struct {
@@ -35,6 +37,18 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
+func isAdmin(authHeader string) bool {
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+	if err != nil || !token.Valid {
+		return false
+	}
+	return claims.Role == "admin"
+}
+
 // RegisterHandler для регистрации нового пользователя
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
@@ -44,6 +58,18 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Проверка авторизации администратора
+	authHeader := r.Header.Get("Authorization")
+	if creds.Role == "admin" && !isAdmin(authHeader) {
+		http.Error(w, "Only administrators can create other administrators", http.StatusForbidden)
+		return
+	}
+
+	// Назначаем роль user, если не указана
+	if creds.Role == "" {
+		creds.Role = "user"
+	}
+
 	hashedPassword, err := HashPassword(creds.Password)
 	if err != nil {
 		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
@@ -51,7 +77,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = database.DB.Exec("INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)",
-		creds.Username, hashedPassword, "user")
+		creds.Username, hashedPassword, creds.Role)
 	if err != nil {
 		http.Error(w, "User already exists", http.StatusBadRequest)
 		return
