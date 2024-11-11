@@ -1,8 +1,8 @@
 package main
 
 import (
-	"url-screenshot-backend/database"
-	"url-screenshot-backend/server"
+	"github.com/akproger/url-screenshot-backend/database"
+	"github.com/akproger/url-screenshot-backend/server"
 )
 
 func main() {

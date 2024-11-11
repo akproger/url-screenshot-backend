@@ -33,6 +33,6 @@ func CheckURLHandler(w http.ResponseWriter, r *http.Request) {
 		response.URL = existingURL
 	}
 
-	w.Header().Set("Content-Type", application/json)
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
