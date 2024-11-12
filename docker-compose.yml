@@ -24,6 +24,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./alter_table.sql:/docker-entrypoint-initdb.d/alter_table.sql:ro
     networks:
       - app-network  # Подключаем к общей сети
 
